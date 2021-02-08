@@ -1,0 +1,16 @@
+{
+	"private": true,
+	"name": "example",
+	"version": "0.0.0",
+	"scripts": {
+		"build": "parcel build src/index.js"
+	},
+	"devDependencies": {
+		"@mischnic/parcel-resolver-root": "*",
+		"parcel": "^2.0.0-nightly.574"
+	},
+	"@mischnic/parcel-resolver-root": {
+		"/": "./src/a",
+		"~": "./src/b"
+	}
+}

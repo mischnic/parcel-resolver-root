@@ -1,0 +1,23 @@
+{
+	"name": "@mischnic/parcel-resolver-root",
+	"version": "0.0.0",
+	"license": "MIT",
+	"main": "index.js",
+	"publishConfig": {
+		"access": "public"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/mischnic/parcel-resolver-root.git"
+	},
+	"dependencies": {
+		"@parcel/diagnostic": "^2.0.0-nightly.576",
+		"@parcel/plugin": "^2.0.0-nightly.576",
+		"@parcel/utils": "^2.0.0-nightly.576",
+		"nullthrows": "^1.1.1"
+	},
+	"engines": {
+		"node": ">=12",
+		"parcel": ">=2.0.0-beta.1"
+	}
+}
