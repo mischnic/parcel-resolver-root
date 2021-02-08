@@ -26,8 +26,8 @@ You can set what `~` and `/` resolve to like this:
 		"build": "parcel build src/index.js"
 	},
 	"devDependencies": {
-		"@mischnic/parcel-resolver-root": "*",
-		"parcel": "^2.0.0-nightly.574"
+		"@mischnic/parcel-resolver-root": "0.1.0",
+		"parcel": "2.0.0-nightly.574"
 	},
 	"@mischnic/parcel-resolver-root": {
 		"/": "./src/a",
