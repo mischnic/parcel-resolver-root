@@ -108,7 +108,7 @@ async function load(
 |}> */ {
   let result = await loadConfig(inputFS, resolveFrom, ["package.json"]);
 
-  let config = result?.config[NAME];
+  let config = result && result.config[NAME];
   if (!config) {
     return {
       rewrites: null,
