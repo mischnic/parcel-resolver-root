@@ -3,5 +3,8 @@
 	"workspaces": [
 		"example",
 		"parcel-resolver-root"
-	]
+	],
+	"dependencies": {
+		"flow-bin": "^0.144.0"
+	}
 }

@@ -3,11 +3,13 @@
 	"name": "example",
 	"version": "0.0.0",
 	"scripts": {
+		"start": "parcel src/index.js",
 		"build": "parcel build src/index.js"
 	},
 	"devDependencies": {
+		"@babel/core": "^7.12.16",
 		"@mischnic/parcel-resolver-root": "*",
-		"parcel": "^2.0.0-nightly.574"
+		"parcel": "2.0.0-nightly.590"
 	},
 	"@mischnic/parcel-resolver-root": {
 		"/": "./src/a",

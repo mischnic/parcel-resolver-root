@@ -11,9 +11,10 @@
 		"url": "https://github.com/mischnic/parcel-resolver-root.git"
 	},
 	"dependencies": {
-		"@parcel/diagnostic": "^2.0.0-nightly.576",
-		"@parcel/plugin": "^2.0.0-nightly.576",
-		"@parcel/utils": "^2.0.0-nightly.576",
+		"@parcel/diagnostic": "2.0.0-nightly.592",
+		"@parcel/node-resolver-core": "2.0.0-nightly.2214",
+		"@parcel/plugin": "2.0.0-nightly.592",
+		"@parcel/utils": "2.0.0-nightly.592",
 		"nullthrows": "^1.1.1"
 	},
 	"engines": {

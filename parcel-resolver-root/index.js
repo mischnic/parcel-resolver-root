@@ -1,3 +1,15 @@
+// @flow
+
+/*::
+
+import type {
+  Resolver as ResolverType,
+  FileCreateInvalidation,
+  FilePath,
+} from "@parcel/types";
+
+*/
+
 const path = require("path");
 const { Resolver } = require("@parcel/plugin");
 const { default: NodeResolver } = require("@parcel/node-resolver-core");
@@ -8,7 +20,7 @@ const { encodeJSONKeyComponent } = require("@parcel/diagnostic");
 // ex. `imports-loader?$=jquery!./example.js`
 const WEBPACK_IMPORT_REGEX = /\S+-loader\S*!\S+/g;
 
-module.exports = new Resolver({
+module.exports = (new Resolver({
   async resolve({ dependency, options, filePath }) {
     if (WEBPACK_IMPORT_REGEX.test(dependency.moduleSpecifier)) {
       throw new Error(
@@ -17,20 +29,25 @@ module.exports = new Resolver({
     }
 
     // -------------------- MODIFIED --------------------
-    let config =
-      dependency.resolveFrom &&
-      (await load(dependency.resolveFrom, options.inputFS));
-    if (config) {
-      for (let [k, v] of Object.entries(config)) {
-        if (filePath.startsWith(k)) {
-          filePath = path.relative(
-            path.dirname(dependency.resolveFrom),
-            path.join(v, filePath.slice(k.length))
-          );
-          if (!filePath.startsWith(".")) {
-            filePath = "./" + filePath;
+    let invalidateOnFileCreate = [],
+      invalidateOnFileChange = [];
+    if (dependency.resolveFrom) {
+      let result = await load(dependency.resolveFrom, options.inputFS);
+      let { rewrites } = result;
+      ({ invalidateOnFileCreate, invalidateOnFileChange } = result);
+
+      if (rewrites) {
+        for (let [k, v] of rewrites) {
+          if (filePath.startsWith(k)) {
+            filePath = path.relative(
+              path.dirname(dependency.resolveFrom),
+              path.join(v, filePath.slice(k.length))
+            );
+            if (!filePath.startsWith(".")) {
+              filePath = "./" + filePath;
+            }
+            break;
           }
-          break;
         }
       }
     }
@@ -53,14 +70,19 @@ module.exports = new Resolver({
       mainFields,
     });
 
-    return resolver.resolve({
+    let result = await resolver.resolve({
       filename: filePath,
       isURL: dependency.isURL,
       parent: dependency.resolveFrom,
       env: dependency.env,
     });
+    // -------------------- MODIFIED --------------------
+    result.invalidateOnFileCreate.push(...invalidateOnFileCreate);
+    result.invalidateOnFileChange.push(...invalidateOnFileChange);
+    // -------------------- MODIFIED --------------------
+    return result;
   },
-});
+}) /*: ResolverType */);
 
 const NAME = "@mischnic/parcel-resolver-root";
 const CONFIG_SCHEMA = {
@@ -76,12 +98,25 @@ const CONFIG_SCHEMA = {
   additionalProperties: false,
 };
 
-async function load(resolveFrom, inputFS) {
+async function load(
+  resolveFrom,
+  inputFS
+) /*: Promise<{|
+  rewrites: ?Map<string, string>,
+  invalidateOnFileCreate: Array<FileCreateInvalidation>,
+  invalidateOnFileChange: Array<FilePath>,
+|}> */ {
   let result = await loadConfig(inputFS, resolveFrom, ["package.json"]);
 
   let config = result?.config[NAME];
   if (!config) {
-    return;
+    return {
+      rewrites: null,
+      invalidateOnFileChange: [],
+      invalidateOnFileCreate: [
+        { aboveFilePath: resolveFrom, fileName: "package.json" },
+      ],
+    };
   }
 
   validateSchema.diagnostic(
@@ -96,12 +131,17 @@ async function load(resolveFrom, inputFS) {
     "Invalid config for " + NAME
   );
 
-  config = Object.fromEntries(
-    Object.entries(config).map(([k, v]) => [
-      k,
-      path.resolve(path.dirname(result.files[0].filePath), v),
-    ])
-  );
+  // $FlowFixMe[incompatible-type]
+  let entries /*: Array<[string, string]> */ = Object.entries(config);
 
-  return config;
+  return {
+    rewrites: new Map(
+      entries.map(([k, v]) => [
+        k,
+        path.resolve(path.dirname(result.files[0].filePath), v),
+      ])
+    ),
+    invalidateOnFileChange: [result.files[0].filePath],
+    invalidateOnFileCreate: [],
+  };
 }

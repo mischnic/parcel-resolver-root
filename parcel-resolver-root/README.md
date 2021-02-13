@@ -2,7 +2,7 @@
 
 Change what `/` and `~` resolve to.
 
-**You need to clear the cache manually after modifying the config for this package (until Parcel has an API for enabling resolver cache invalidation).**
+**Requires parcel@2.0.0-nightly.585 or newer**
 
 ## Usage:
 
