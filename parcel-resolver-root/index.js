@@ -77,8 +77,11 @@ module.exports = (new Resolver({
       env: dependency.env,
     });
     // -------------------- MODIFIED --------------------
-    result.invalidateOnFileCreate.push(...invalidateOnFileCreate);
-    result.invalidateOnFileChange.push(...invalidateOnFileChange);
+    if (result && result.diagnostics == null) {
+      // the resolution didn't fail
+      result.invalidateOnFileCreate.push(...invalidateOnFileCreate);
+      result.invalidateOnFileChange.push(...invalidateOnFileChange);
+    }
     // -------------------- MODIFIED --------------------
     return result;
   },
