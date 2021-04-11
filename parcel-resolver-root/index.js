@@ -32,7 +32,7 @@ module.exports = (new Resolver({
     let invalidateOnFileCreate = [],
       invalidateOnFileChange = [];
     if (dependency.resolveFrom) {
-      let result = await load(dependency.resolveFrom, options.inputFS);
+      let result = await load(options, dependency.resolveFrom, options.inputFS);
       let { rewrites } = result;
       ({ invalidateOnFileCreate, invalidateOnFileChange } = result);
 
@@ -102,6 +102,7 @@ const CONFIG_SCHEMA = {
 };
 
 async function load(
+  options,
   resolveFrom,
   inputFS
 ) /*: Promise<{|
@@ -109,17 +110,42 @@ async function load(
   invalidateOnFileCreate: Array<FileCreateInvalidation>,
   invalidateOnFileChange: Array<FilePath>,
 |}> */ {
+  let invalidateOnFileCreate = [],
+    invalidateOnFileChange = [];
   let result = await loadConfig(inputFS, resolveFrom, ["package.json"]);
-
   let config = result && result.config[NAME];
+
+  if (result) {
+    invalidateOnFileChange.push(result.files[0].filePath);
+  } else {
+    invalidateOnFileCreate.push({
+      aboveFilePath: resolveFrom,
+      fileName: "package.json",
+    });
+  }
+
   if (!config) {
-    return {
-      rewrites: null,
-      invalidateOnFileChange: [],
-      invalidateOnFileCreate: [
-        { aboveFilePath: resolveFrom, fileName: "package.json" },
-      ],
-    };
+    let result = await loadConfig(
+      inputFS,
+      path.join(options.projectRoot, "index"),
+      ["package.json"]
+    );
+    config = result && result.config[NAME];
+    if (!config) {
+      if (result) {
+        invalidateOnFileChange.push(result.files[0].filePath);
+      } else {
+        invalidateOnFileCreate.push({
+          aboveFilePath: path.join(options.projectRoot, "index"),
+          fileName: "package.json",
+        });
+      }
+      return {
+        rewrites: null,
+        invalidateOnFileChange,
+        invalidateOnFileCreate,
+      };
+    }
   }
 
   validateSchema.diagnostic(
@@ -144,7 +170,7 @@ async function load(
         path.resolve(path.dirname(result.files[0].filePath), v),
       ])
     ),
-    invalidateOnFileChange: [result.files[0].filePath],
-    invalidateOnFileCreate: [],
+    invalidateOnFileChange,
+    invalidateOnFileCreate,
   };
 }
