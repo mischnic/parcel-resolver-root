@@ -125,7 +125,7 @@ async function load(
   }
 
   if (!config) {
-    let result = await loadConfig(
+    result = await loadConfig(
       inputFS,
       path.join(options.projectRoot, "index"),
       ["package.json"]
