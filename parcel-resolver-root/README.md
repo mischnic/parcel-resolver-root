@@ -2,8 +2,6 @@
 
 Change what `/` and `~` resolve to.
 
-**Requires parcel@2.0.0-nightly.585 or newer**
-
 ## Usage:
 
 Add a `.parcelrc` into your root directory (next to `package.json`):
@@ -26,8 +24,8 @@ You can set what `~` and `/` resolve to like this:
 		"build": "parcel build src/index.js"
 	},
 	"devDependencies": {
-		"@mischnic/parcel-resolver-root": "0.1.0",
-		"parcel": "2.0.0-nightly.574"
+		"@mischnic/parcel-resolver-root": "^0.4.0",
+		"parcel": "^2.0.0"
 	},
 	"@mischnic/parcel-resolver-root": {
 		"/": "./src/a",

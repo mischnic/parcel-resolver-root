@@ -5,6 +5,6 @@
 		"parcel-resolver-root"
 	],
 	"dependencies": {
-		"flow-bin": "^0.144.0"
+		"flow-bin": "^0.162.1"
 	}
 }

@@ -21,10 +21,10 @@ const { encodeJSONKeyComponent } = require("@parcel/diagnostic");
 const WEBPACK_IMPORT_REGEX = /\S+-loader\S*!\S+/g;
 
 module.exports = (new Resolver({
-  async resolve({ dependency, options, filePath }) {
-    if (WEBPACK_IMPORT_REGEX.test(dependency.moduleSpecifier)) {
+  async resolve({ dependency, options, specifier }) {
+    if (WEBPACK_IMPORT_REGEX.test(dependency.specifier)) {
       throw new Error(
-        `The import path: ${dependency.moduleSpecifier} is using webpack specific loader import syntax, which isn't supported by Parcel.`
+        `The import path: ${dependency.specifier} is using webpack specific loader import syntax, which isn't supported by Parcel.`
       );
     }
 
@@ -38,13 +38,13 @@ module.exports = (new Resolver({
 
       if (rewrites) {
         for (let [k, v] of rewrites) {
-          if (filePath.startsWith(k)) {
-            filePath = path.relative(
+          if (specifier.startsWith(k)) {
+            specifier = path.relative(
               path.dirname(dependency.resolveFrom),
-              path.join(v, filePath.slice(k.length))
+              path.join(v, specifier.slice(k.length))
             );
-            if (!filePath.startsWith(".")) {
-              filePath = "./" + filePath;
+            if (!specifier.startsWith(".")) {
+              specifier = "./" + specifier;
             }
             break;
           }
@@ -53,37 +53,25 @@ module.exports = (new Resolver({
     }
     // -------------------- MODIFIED --------------------
 
-    let mainFields = ["source", "browser"];
-
-    // If scope hoisting is enabled, we can get smaller builds using esmodule input, so choose `module` over `main`.
-    // Otherwise, we'd be wasting time transforming esmodules to commonjs, so choose `main` over `module`.
-    if (dependency.env.shouldScopeHoist) {
-      mainFields.push("module", "main");
-    } else {
-      mainFields.push("main", "module");
-    }
-
     const resolver = new NodeResolver({
       fs: options.inputFS,
       projectRoot: options.projectRoot,
-      extensions: ["ts", "tsx", "js", "jsx", "json", "css", "styl", "vue"],
-      mainFields,
+      // Extensions are always required in URL dependencies.
+      extensions:
+        dependency.specifierType === "commonjs" ||
+        dependency.specifierType === "esm"
+          ? ["ts", "tsx", "js", "jsx", "json"]
+          : [],
+      mainFields: ["source", "browser", "module", "main"],
     });
 
-    let result = await resolver.resolve({
-      filename: filePath,
-      isURL: dependency.isURL,
+    return resolver.resolve({
+      filename: specifier,
+      specifierType: dependency.specifierType,
       parent: dependency.resolveFrom,
       env: dependency.env,
+      sourcePath: dependency.sourcePath,
     });
-    // -------------------- MODIFIED --------------------
-    if (result && result.diagnostics == null) {
-      // the resolution didn't fail
-      result.invalidateOnFileCreate.push(...invalidateOnFileCreate);
-      result.invalidateOnFileChange.push(...invalidateOnFileChange);
-    }
-    // -------------------- MODIFIED --------------------
-    return result;
   },
 }) /*: ResolverType */);
 
@@ -101,11 +89,7 @@ const CONFIG_SCHEMA = {
   additionalProperties: false,
 };
 
-async function load(
-  options,
-  resolveFrom,
-  inputFS
-) /*: Promise<{|
+async function load(options, resolveFrom, inputFS) /*: Promise<{|
   rewrites: ?Map<string, string>,
   invalidateOnFileCreate: Array<FileCreateInvalidation>,
   invalidateOnFileChange: Array<FilePath>,
