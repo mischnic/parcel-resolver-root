@@ -96,7 +96,7 @@ async function load(options, resolveFrom, inputFS) /*: Promise<{|
 |}> */ {
   let invalidateOnFileCreate = [],
     invalidateOnFileChange = [];
-  let result = await loadConfig(inputFS, resolveFrom, ["package.json"]);
+  let result = await loadConfig(inputFS, resolveFrom, ["package.json"], options.projectRoot);
   let config = result && result.config[NAME];
 
   if (result) {
